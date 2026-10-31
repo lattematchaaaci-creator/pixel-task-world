@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Task World</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff4e8;color:#594b45;font-family:monospace}
+header{text-align:center;padding:22px;background:#f8d8c2}
+h1{margin:0;font-size:25px}
+header p{margin:8px}
+main{max-width:700px;margin:auto;padding:16px}
+.card{background:#fff;border:3px solid #e9cbb5;border-radius:16px;padding:16px;margin:14px 0}
+.world{height:230px;background:#dff3dc;border:3px solid #9bc99b;border-radius:12px;position:relative;overflow:hidden}
+.floor{position:absolute;bottom:0;height:50px;background:#b7dba9;width:100%}
+.desk{position:absolute;right:50px;bottom:48px;font-size:48px}
+.character{position:absolute;bottom:45px;left:20px;font-size:45px;transition:left 2s linear}
+.working{animation:bounce .5s infinite alternate}
+@keyframes bounce{to{transform:translateY(-7px)}}
+input,select,button{font-family:monospace;padding:10px;border-radius:9px;border:2px solid #e6c7b1;margin:4px}
+input{width:100%}
+button{background:#f6c5a4;color:#594b45;cursor:pointer;font-weight:bold}
+button:hover{background:#f2b38b}
+.task{background:#fff8f0;padding:12px;margin:10px 0;border-radius:10px}
+.done{text-decoration:line-through;opacity:.6}
+.small{font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>🌷 Pixel Task World 🌷</h1>
+<p>Your cozy little task adventure!</p>
+</header>
+
+<main>
+<div class="card">
+<h3>🌿 Your little world</h3>
+<div class="world">
+<div class="desk">🪑💻</div>
+<div class="character" id="character">🐰</div>
+<div class="floor"></div>
+</div>
+<p id="status">Your character is waiting for a task!</p>
+</div>
+
+<div class="card">
+<h3>📝 Add a task</h3>
+<input id="taskInput" placeholder="What do you want to do?">
+<select id="characterSelect">
+<option value="🐰">Bunny</option>
+<option value="🐱">Cat</option>
+<option value="🐻">Bear</option>
+<option value="🐸">Frog</option>
+</select>
+<br>
+<button onclick="addTask()">＋ Add task</button>
+</div>
+
+<div class="card">
+<h3>📋 Your tasks</h3>
+<div id="tasks"></div>
+<p>⭐ XP: <span id="xp">0</span></p>
+</div>
+</main>
+
+<script>
+let tasks=JSON.parse(localStorage.getItem("pixelTasks")||"[]");
+let xp=Number(localStorage.getItem("pixelXP")||0);
+let active=null;
+let timer=null;
+
+function save(){
+localStorage.setItem("pixelTasks",JSON.stringify(tasks));
+localStorage.setItem("pixelXP",xp);
+}
+
+function render(){
+document.getElementById("tasks").innerHTML="";
+tasks.forEach((t,i)=>{
+let div=document.createElement("div");
+div.className="task";
+div.innerHTML=`<b>${t.text}</b><br>
+<span class="small">${t.done?"Completed!":"Not completed yet"}</span><br>
+<button onclick="startTask(${i})">▶ Start</button>
+<button onclick="pauseTask()">⏸ Pause</button>
+<button onclick="completeTask(${i})">✅ Complete</button>
+<button onclick="deleteTask(${i})">🗑</button>`;
+document.getElementById("tasks").appendChild(div);
+});
+document.getElementById("xp").textContent=xp;
+}
+
+function addTask(){
+let input=document.getElementById("taskInput");
+if(!input.value.trim())return;
+tasks.push({text:input.value.trim(),done:false});
+input.value="";
+save();
+render();
+}
+
+function startTask(i){
+pauseTask();
+if(tasks[i].done)return;
+active=i;
+let character=document.getElementById("character");
+character.textContent=document.getElementById("characterSelect").value;
+character.style.left="70%";
+character.classList.add("working");
+document.getElementById("status").textContent="Your character is working hard! ✨";
+timer=setInterval(()=>{
+document.getElementById("status").textContent=
+"Working on: "+tasks[i].text+" 💪";
+},2000);
+}
+
+function pauseTask(){
+clearInterval(timer);
+timer=null;
+document.getElementById("character").classList.remove("working");
+document.getElementById("status").textContent="Taking a little break ☕";
+}
+
+function completeTask(i){
+pauseTask();
+tasks[i].done=true;
+xp+=10;
+document.getElementById("character").style.left="20px";
+document.getElementById("status").textContent="Yay! Task completed! 🎉";
+save();
+render();
+}
+
+function deleteTask(i){
+tasks.splice(i,1);
+save();
+render();
+}
+
+render();
+</script>
+</body>
+</html>
